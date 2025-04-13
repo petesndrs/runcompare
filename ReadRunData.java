@@ -4,7 +4,9 @@ import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
 import java.net.http.HttpRequest;
 import java.net.URI;
+import javax.swing.text.html.HTML;
 import javax.swing.text.html.HTMLEditorKit;
+import javax.swing.text.MutableAttributeSet;
 
 class ReadRunData
 {
@@ -12,10 +14,117 @@ class ReadRunData
   
   class RunPageParserCallback extends HTMLEditorKit.ParserCallback {
 
-    public void handleComment(char[] data,int pos){
-		System.out.println("Found " + pos + ":" + data.length);
+	static final String DIV1_MAIN = "main";
+	static final String DIV2_PRIMARY = "primary";
+	static final String DIV3_CONTENT = "content";
+	
+	static final int EVENT_NUMBER_COLUMN = 2;
+	static final int TIME_COLUMN = 4;
+	
+	String currentDiv = null;
+	int divDepth = 0;
+	
+	boolean inContentDiv = false;
+	int contentDivDepth = 0;
+	boolean inTable = false;
+	boolean inTableRow = false;
+    boolean inTableData = false;
+	int columnNumber = 0;
+	boolean inCaption = false;
+	boolean inAllResultsTable = false;
+	
+    public void handleComment(char[] data, int pos){
     }
-  
+    public void handleSimpleTag(HTML.Tag t, MutableAttributeSet a, int pos)
+    {
+	  //System.out.println("Simple HTML.Tag " + t);
+	}
+	public void handleStartTag(HTML.Tag t, MutableAttributeSet a, int pos)
+    {
+	  //System.out.println("Start HTML.Tag " + t);
+	  if (t == HTML.Tag.DIV) {
+		  divDepth++;
+		  String divName = (String)a.getAttribute(HTML.Attribute.ID);
+		  if (divName != null && divName.contains(DIV1_MAIN)) {
+			System.out.println(" **** " + divName);
+			if (currentDiv == null) {
+			  currentDiv = DIV1_MAIN;
+			} else {
+			}
+		  } else if (divName != null && divName.contains(DIV2_PRIMARY)) {
+			System.out.println(" **** " + divName);
+			if (currentDiv == DIV1_MAIN) {
+			  currentDiv = DIV2_PRIMARY;
+			} else {
+			}
+		  } else if (divName != null && divName.contains(DIV3_CONTENT)) {
+			System.out.println(" **** " + divName);
+			if (currentDiv == DIV2_PRIMARY) {
+			  currentDiv = DIV3_CONTENT;
+			  contentDivDepth = divDepth;
+			  inContentDiv = true;
+			} else {
+			}
+		  }
+		  
+	  }  
+	  if (t == HTML.Tag.TABLE) {
+		  inTable = true;
+		  System.out.println("Table Start");
+	  }
+	  if (t == HTML.Tag.CAPTION) {
+		  inCaption = true;
+		  System.out.println("Caption Start");
+      }
+	  if (t == HTML.Tag.TR) {
+		  inTableRow = true;
+		  columnNumber = 0;
+	  }
+	  if (t == HTML.Tag.TD) {
+		  inTableData = true;
+		  columnNumber++;
+	  }
+	}
+	public void handleEndTag(HTML.Tag t, int pos)
+    {
+	  if (t == HTML.Tag.DIV) {
+		  divDepth--;
+	  }
+	  if (t == HTML.Tag.TABLE) {
+		  inTable = false;
+		  inAllResultsTable = false;
+		  System.out.println("Table End");
+	  }
+	  if (t == HTML.Tag.CAPTION) {
+		  inCaption = false;
+		  System.out.println("Caption End");
+      }
+	  if (t == HTML.Tag.TR) {
+		  inTableRow = false;
+	  }
+	  if (t == HTML.Tag.TD) {
+		  inTableData = false;
+	  }
+	}
+	public void handleText(char[] data, int pos){
+		if (inContentDiv && inTable && inCaption) {
+		  String captionData = new String(data);
+		  System.out.println(captionData);
+		    if (captionData.contains("All Results at Dulwich")) {
+              System.out.println(" **** " + captionData);
+			  inAllResultsTable = true;
+		    } else {
+			  inAllResultsTable = false;
+			}
+		}
+		if (inAllResultsTable && inTableRow && inTableData) {
+		  String tableData = new String(data);
+		  if (columnNumber == EVENT_NUMBER_COLUMN || columnNumber == TIME_COLUMN){
+		    System.out.println(tableData);
+		  }
+		}
+		
+	}
   }
   
   private void run(){
