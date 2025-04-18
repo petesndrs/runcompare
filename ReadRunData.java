@@ -1,4 +1,6 @@
+
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.StringReader;
 import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
@@ -11,6 +13,8 @@ import java.util.Map;
 import javax.swing.text.html.HTML;
 import javax.swing.text.html.HTMLEditorKit;
 import javax.swing.text.MutableAttributeSet;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 class ReadRunData
 {
@@ -18,6 +22,7 @@ class ReadRunData
 
   List<String> runners;
   Map<String, List<EventData>> runnersEvents;
+  List<String> names;
 
   class EventData {
     public final String eventNumber;
@@ -29,32 +34,47 @@ class ReadRunData
     }
   }
 
-  List<EventData> currentEventData;
-
+  
   class RunPageParserCallback extends HTMLEditorKit.ParserCallback {
 
-	static final String DIV1_MAIN = "main";
-	static final String DIV2_PRIMARY = "primary";
-	static final String DIV3_CONTENT = "content";
+	  static final String DIV1_MAIN = "main";
+	  static final String DIV2_PRIMARY = "primary";
+	  static final String DIV3_CONTENT = "content";
 
-	static final int EVENT_NUMBER_COLUMN = 2;
-	static final int TIME_COLUMN = 4;
+    private String parsedName;
+    private List<EventData> parsedEventData;
+  
+	  static final int EVENT_NUMBER_COLUMN = 2;
+	  static final int TIME_COLUMN = 4;
 
-	String currentEventNumber;
-	String currentTime;
+	  private String parsedEventNumber;
+	  private String parsedTime;
+  
+	  private String currentDiv = null;
+	  private int divDepth = 0;
 
-	String currentDiv = null;
-	int divDepth = 0;
+	  private boolean inContentDiv = false;
+	  private int contentDivDepth = 0;
+	  private boolean inTable = false;
+	  private boolean inTableRow = false;
+    private boolean inTableData = false;
+	  private int columnNumber = 0;
+	  private boolean inCaption = false;
+	  private boolean inAllResultsTable = false;
+    private boolean inH2 = false;
 
-	boolean inContentDiv = false;
-	int contentDivDepth = 0;
-	boolean inTable = false;
-	boolean inTableRow = false;
-  boolean inTableData = false;
-	int columnNumber = 0;
-	boolean inCaption = false;
-	boolean inAllResultsTable = false;
-
+    RunPageParserCallback() {
+      parsedEventData = new ArrayList<>();
+    }
+  
+    public String getParsedName(){
+      return parsedName;
+    }
+    
+    public List<EventData> getParsedEventData(){
+      return parsedEventData;
+    }
+    
 	  public void handleStartTag(HTML.Tag t, MutableAttributeSet a, int pos){
 	    //System.out.println("Start HTML.Tag " + t);
 	    if (t == HTML.Tag.DIV) {
@@ -98,6 +118,10 @@ class ReadRunData
 		    inTableData = true;
 		    columnNumber++;
 	    }
+      if (t == HTML.Tag.H2) {
+        inH2 = true;
+        System.out.println("H2 Start");
+      }
 	  }
 
 	  public void handleEndTag(HTML.Tag t, int pos){
@@ -116,19 +140,28 @@ class ReadRunData
 	    if (t == HTML.Tag.TR) {
 		    inTableRow = false;
 		    if (inAllResultsTable) {
-			    System.out.println(currentEventNumber + " " + currentTime);
-			    currentEventData.add(new EventData(currentEventNumber, currentTime));
+			    System.out.println(parsedEventNumber + " " + parsedTime);
+			    parsedEventData.add(new EventData(parsedEventNumber, parsedTime));
 		    }
 	    }
 	    if (t == HTML.Tag.TD) {
 		    inTableData = false;
 	    }
+      if (t == HTML.Tag.H2) {
+        inH2 = false;
+        System.out.println("H2 End");
+      }
 	  }
 
 	  public void handleText(char[] data, int pos){
+      if (inContentDiv && inH2) {
+        String header2Data = new String(data);
+		    System.out.println("H2 Text: " + header2Data);
+        parsedName = header2Data;
+      }
 		  if (inContentDiv && inTable && inCaption) {
 		    String captionData = new String(data);
-		    System.out.println(captionData);
+		    System.out.println("Caption Text: " + captionData);
 		    if (captionData.contains("All Results at Dulwich")) {
           System.out.println(" **** " + captionData);
 			    inAllResultsTable = true;
@@ -139,9 +172,9 @@ class ReadRunData
 		  if (inAllResultsTable && inTableRow && inTableData) {
 		    String tableData = new String(data);
 		    if (columnNumber == EVENT_NUMBER_COLUMN) {
-			    currentEventNumber = new String(tableData);
+			    parsedEventNumber = new String(tableData);
 		    } else if (columnNumber == TIME_COLUMN){
-		      currentTime = new String(tableData);
+		      parsedTime = new String(tableData);
 		    }
 		  }
 	  }
@@ -152,14 +185,13 @@ class ReadRunData
 
 	  runners = new ArrayList<String>();
 	  runners.add("690790");
-	
-	  runnersEvents = new HashMap<>();
+    runners.add("1198163");
 
-	
+	  runnersEvents = new HashMap<>();
+    names = new ArrayList<>();
+
     for (String runner : runners) {
-	
-	    currentEventData = new ArrayList<>();
-	
+
       HttpRequest request = HttpRequest.newBuilder()
         .uri(URI.create(String.format("https://www.parkrun.org.uk/dulwich/parkrunner/%s/",runner)))
         .setHeader("User-Agent", USER_AGENT)
@@ -172,22 +204,55 @@ class ReadRunData
           .build()
           .send(request, HttpResponse.BodyHandlers.ofString());
         System.out.println("HttpResponse " + response.statusCode());
-        responseString = (String) response.body();
-        System.out.println(responseString);
+        responseString = response.body();
+        //System.out.println(responseString);
       } catch (IOException | InterruptedException ex) {
       }
 
       StringReader r = new StringReader(responseString);
       HTMLEditorKit.Parser parse = new RunPageParser().getParser();
 
+      RunPageParserCallback callback = new RunPageParserCallback();
       try {
-        parse.parse(r, new RunPageParserCallback(), true);
+        parse.parse(r, callback, true);
       } catch (IOException ex) {
       }
 
-	    System.out.println("Events found " + currentEventData.size());
-      runnersEvents.put(runner, currentEventData);
+	    System.out.println("Events found " + callback.getParsedEventData().size());
+      runnersEvents.put(runner, callback.getParsedEventData());
+      names.add(callback.getParsedName());
 	  }
+    
+    dumpAllRunners();
+  }
+  
+  private void dumpAllRunners() {
+    
+    OutputStream out;
+    
+    List<JSONObject> runnerData = new ArrayList<>();
+    for (int i = 0; i < runners.size(); ++i) {
+      String runner = runners.get(i);
+      JSONObject jsonRunner = new JSONObject();
+      jsonRunner.put("id", runner);
+      jsonRunner.put("name", names.get(i));
+      List<JSONObject> eventData = new ArrayList<>();
+      for (EventData event : runnersEvents.get(runner)) {
+        JSONObject jsonEvent = new JSONObject(); 
+        jsonEvent.put("event", event.eventNumber);
+        jsonEvent.put("time", event.time);
+        eventData.add(jsonEvent);
+      }
+      JSONArray jsonEventArray = new JSONArray(eventData);
+      jsonRunner.put("events", jsonEventArray);
+      runnerData.add(jsonRunner);
+      System.out.println("Single runner:\n" + jsonRunner);
+    }
+    JSONArray jsonRunnerArray = new JSONArray(runnerData);
+    JSONObject all = new JSONObject();
+    all.put("runners", jsonRunnerArray);
+    System.out.println("All runners:\n" + all);
+    
   }
 
   public static void main(String args[])
