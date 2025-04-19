@@ -12,9 +12,10 @@ function body() {
 }
 
 async function getText() {
+    console.log("Getting json");
 	myObject = await fetch("./RunnerData.json");
 	myText = await myObject.text();
-    console.log(text);
+    console.log(myText);
 }
 
 </script>
