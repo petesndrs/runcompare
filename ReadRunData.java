@@ -1,10 +1,10 @@
 
+import java.io.FileWriter;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.StringReader;
 import java.net.http.HttpClient;
-import java.net.http.HttpResponse;
 import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,6 +19,8 @@ import org.json.JSONObject;
 class ReadRunData
 {
   static final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36";
+  static final String URL_FORMAT = "https://www.parkrun.org.uk/%s/parkrunner/%s/";
+  static final String URL_EVENT_NAME = "dulwich";
 
   List<String> runners;
   Map<String, List<EventData>> runnersEvents;
@@ -154,7 +156,7 @@ class ReadRunData
 	  }
 
 	  public void handleText(char[] data, int pos){
-      if (inContentDiv && inH2) {
+      if (inContentDiv && inH2 && parsedName == null) {
         String header2Data = new String(data);
 		    System.out.println("H2 Text: " + header2Data);
         parsedName = header2Data;
@@ -183,17 +185,19 @@ class ReadRunData
   private void run(){
     System.out.println("Run");
 
-	  runners = new ArrayList<String>();
-	  runners.add("690790");
+    runners = new ArrayList<String>();
+    runners.add("690790");
     runners.add("1198163");
 
-	  runnersEvents = new HashMap<>();
+    runnersEvents = new HashMap<>();
     names = new ArrayList<>();
 
     for (String runner : runners) {
 
+      String url = String.format(URL_FORMAT, URL_EVENT_NAME, runner);
+      System.out.println(url);
       HttpRequest request = HttpRequest.newBuilder()
-        .uri(URI.create(String.format("https://www.parkrun.org.uk/dulwich/parkrunner/%s/",runner)))
+        .uri(URI.create(String.format(URL_FORMAT, URL_EVENT_NAME, runner)))
         .setHeader("User-Agent", USER_AGENT)
         .build();
 
@@ -207,6 +211,8 @@ class ReadRunData
         responseString = response.body();
         //System.out.println(responseString);
       } catch (IOException | InterruptedException ex) {
+        System.out.println("HTTP Request Exception " + ex);
+        return;
       }
 
       StringReader r = new StringReader(responseString);
@@ -216,26 +222,26 @@ class ReadRunData
       try {
         parse.parse(r, callback, true);
       } catch (IOException ex) {
+        System.out.println("Parser Exception " + ex);
+        return;
       }
 
-	    System.out.println("Events found " + callback.getParsedEventData().size());
+      System.out.println("Events found " + callback.getParsedEventData().size());
       runnersEvents.put(runner, callback.getParsedEventData());
       names.add(callback.getParsedName());
-	  }
+    }
     
     dumpAllRunners();
   }
   
   private void dumpAllRunners() {
     
-    OutputStream out;
-    
     List<JSONObject> runnerData = new ArrayList<>();
     for (int i = 0; i < runners.size(); ++i) {
       String runner = runners.get(i);
       JSONObject jsonRunner = new JSONObject();
       jsonRunner.put("id", runner);
-      jsonRunner.put("name", names.get(i));
+      jsonRunner.put("name", names.get(i).trim());
       List<JSONObject> eventData = new ArrayList<>();
       for (EventData event : runnersEvents.get(runner)) {
         JSONObject jsonEvent = new JSONObject(); 
@@ -253,6 +259,14 @@ class ReadRunData
     all.put("runners", jsonRunnerArray);
     System.out.println("All runners:\n" + all);
     
+    try {
+      FileWriter fileWriter = new FileWriter("RunnerData.json");
+      all.write(fileWriter);
+      fileWriter.close();
+    } catch (IOException ex) {
+        System.out.println("File Writer Exception " + ex);
+        return;
+    }
   }
 
   public static void main(String args[])
