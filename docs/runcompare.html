@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<title>runcompare</title>
+
+<script>
+
+function body() {
+	console.log("body()");
+	getText();
+}
+
+async function getText() {
+	myObject = await fetch("./RunnerData.json");
+	myText = await myObject.text();
+    console.log(text);
+}
+
+</script>
+
+</head>
+
+<body onload="body()">
+
+<h1>Compare the parkruns</h1>
+
+<h2>Select Runners</h2>
+
+<p class="filler">&nbsp;</p>
+
+<footer>
+</footer>
+
+</body>
+
+</html>
