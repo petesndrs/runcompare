@@ -260,7 +260,7 @@ class ReadRunData
     System.out.println("All runners:\n" + all);
     
     try {
-      FileWriter fileWriter = new FileWriter("RunnerData.json");
+      FileWriter fileWriter = new FileWriter("docs/RunnerData.json");
       all.write(fileWriter);
       fileWriter.close();
     } catch (IOException ex) {
