@@ -6,16 +6,60 @@
 
 <script>
 
-function body() {
-	console.log("body()");
-	getText();
+var json
+
+async function body() {
+    console.log("body()");
+    json = await getText();
+    for (const element of json.runners) {
+        console.log("+-> " + element.name);
+    }
+    select1 = document.getElementById("selectRunner1");
+    select2 = document.getElementById("selectRunner2");
+    select3 = document.getElementById("selectRunner3");
+    select4 = document.getElementById("selectRunner4");
+    for (const element of json.runners) {
+        select1.appendChild(new Option(element.name, element.id));
+        select2.appendChild(new Option(element.name, element.id));
+        select3.appendChild(new Option(element.name, element.id));
+        select4.appendChild(new Option(element.name, element.id));
+    }
 }
 
 async function getText() {
     console.log("Getting json");
-	myObject = await fetch("./RunnerData.json");
-	myText = await myObject.text();
+    //myObject = await fetch("https://petesndrs.github.io/runcompare/RunnerData.json");
+    myObject = await fetch("./RunnerData.json");
+    myText = await myObject.text();
     console.log(myText);
+    const json = JSON.parse(myText);
+    return json;
+}
+
+function selectRunner1() {
+    selectRunner(1);
+}
+
+function selectRunner2() {
+    selectRunner(2);
+}
+
+function selectRunner3() {
+    selectRunner(3);
+}
+
+function selectRunner4() {
+    selectRunner(4);
+}
+
+function selectRunner(i) {
+    selected = document.getElementById("selectRunner"+i).value;
+    console.log(selected);
+    for (const element of json.runners) {
+        if (element.id == selected) {
+            console.log("found");
+        }
+    }
 }
 
 </script>
@@ -27,6 +71,30 @@ async function getText() {
 <h1>Compare the parkruns</h1>
 
 <h2>Select Runners</h2>
+
+<p class="boxed">
+<select id="selectRunner1" onchange="selectRunner1()">
+  <option value="region">Select Runner</option>
+</select>
+</p>
+
+<p class="boxed">
+<select id="selectRunner2" onchange="selectRunner2()">
+  <option value="region">Select Runner</option>
+</select>
+</p>
+
+<p class="boxed">
+<select id="selectRunner3" onchange="selectRunner3()">
+  <option value="region">Select Runner</option>
+</select>
+</p>
+
+<p class="boxed">
+<select id="selectRunner4" onchange="selectRunner4()">
+  <option value="region">Select Runner</option>
+</select>
+</p>
 
 <p class="filler">&nbsp;</p>
 
