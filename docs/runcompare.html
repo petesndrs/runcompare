@@ -4,12 +4,19 @@
 
 <title>runcompare</title>
 
+<script
+src="https://www.gstatic.com/charts/loader.js">
+</script>
+
 <script>
 
 var json
 
 async function body() {
     console.log("body()");
+
+    google.charts.load('current',{packages:['corechart']});
+
     json = await getText();
     for (const element of json.runners) {
         console.log("+-> " + element.name);
@@ -57,9 +64,31 @@ function selectRunner(i) {
     console.log(selected);
     for (const element of json.runners) {
         if (element.id == selected) {
-            console.log("found");
+            console.log("found...");
+			for (const run of element.events) {
+				console.log(run.time + " " + run.event);
+			}
+			drawVisualization(element.name, element.events);
         }
     }
+
+}
+
+function drawVisualization(name, events) {
+  var data = new google.visualization.DataTable();
+  data.addColumn('number', 'Event');
+  data.addColumn('timeofday', name);
+
+  for (const event of events) {
+  if(typeof event.time !== "undefined"){
+	t = String(event.time).split(":");
+	console.log(event.time + " " + event.event + " " + t);
+	data.addRows([[Number(event.event), [0,Number(t[0]),Number(t[1]),0]]]);
+	}
+  }
+
+  var chart = new google.visualization.ScatterChart(document.getElementById('myChart'));
+  chart.draw(data, {});
 }
 
 </script>
@@ -97,6 +126,8 @@ function selectRunner(i) {
 </p>
 
 <p class="filler">&nbsp;</p>
+
+<div id="myChart" style="max-width:800px; height:400px"></div>
 
 <footer>
 </footer>
