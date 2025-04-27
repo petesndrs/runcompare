@@ -10,7 +10,10 @@ src="https://www.gstatic.com/charts/loader.js">
 
 <script>
 
-var json
+var json;
+var data;
+var eventMin = 1000;
+var eventMax = 0;
 
 async function body() {
     console.log("body()");
@@ -18,9 +21,15 @@ async function body() {
     google.charts.load('current',{packages:['corechart']});
 
     json = await getText();
-    for (const element of json.runners) {
-        console.log("+-> " + element.name);
+    for (const runner of json.runners) {
+        console.log("+-> " + runner.name);
+		for (const run of runner.events) {
+				if (Number(run.event) < eventMin) eventMin = Number(run.event);
+				if (Number(run.event) > eventMax) eventMax = Number(run.event);
+			}
     }
+	console.log("Range " + eventMin + "-" + eventMax);
+
     select1 = document.getElementById("selectRunner1");
     select2 = document.getElementById("selectRunner2");
     select3 = document.getElementById("selectRunner3");
@@ -31,6 +40,7 @@ async function body() {
         select3.appendChild(new Option(element.name, element.id));
         select4.appendChild(new Option(element.name, element.id));
     }
+
 }
 
 async function getText() {
@@ -68,27 +78,61 @@ function selectRunner(i) {
 			for (const run of element.events) {
 				console.log(run.time + " " + run.event);
 			}
-			drawVisualization(element.name, element.events);
+			drawVisualization(i, element.name, element.events);
         }
     }
 
 }
 
-function drawVisualization(name, events) {
-  var data = new google.visualization.DataTable();
-  data.addColumn('number', 'Event');
-  data.addColumn('timeofday', name);
+const columns = [];
+
+function drawVisualization(i, name, events) {
+
+  console.log(data);
+  
+  if (typeof data == "undefined") {
+    console.log("new DataTable");
+    data = new google.visualization.DataTable();
+    data.addColumn('number', 'Event');
+	for (ev = eventMax; ev >= eventMin; ev--){
+		data.addRows([[ev]]);
+	}
+	console.log("Number of rows " + data.getNumberOfRows());
+  }
+  
+  console.log(columns);
+  if (typeof columns[i] !== "undefined" && columns[i] !== name) {
+    console.log("Remove old column " + columns[i]);
+    data.removeColumn(i);
+  }
+  
+  columns[i] = name;
+  console.log("Insert new column " + columns[i]);
+  data.insertColumn(i, 'timeofday', name);
 
   for (const event of events) {
-  if(typeof event.time !== "undefined"){
+  if (typeof event.time !== "undefined"){
 	t = String(event.time).split(":");
-	console.log(event.time + " " + event.event + " " + t);
-	data.addRows([[Number(event.event), [0,Number(t[0]),Number(t[1]),0]]]);
+	//console.log(event.time + " " + event.event + " " + t);
+	//console.log("SetValue ", eventMax - Number(event.event), i);
+	data.setValue(eventMax - Number(event.event),i,[0,Number(t[0]),Number(t[1]),0]);
 	}
   }
 
   var chart = new google.visualization.ScatterChart(document.getElementById('myChart'));
-  chart.draw(data, {});
+
+  var options = {
+          hAxis: { minValue: 60, maxValue: 660 },
+          pointSize: 5,
+          series: {
+                0: { pointShape: 'circle', color:'#882222'},
+                1: { pointShape: 'triangle', color:'#228822'},
+                2: { pointShape: 'square', color:'#222222'},
+                3: { pointShape: 'diamond', color:'#222288'}
+            }
+        };
+		
+  chart.draw(data, options);
 }
 
 </script>
