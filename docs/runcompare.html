@@ -122,14 +122,21 @@ function drawVisualization(i, name, events) {
 	t = String(event.time).split(":");
 	//console.log(event.time + " " + event.event + " " + t);
 	//console.log("SetValue ", eventMax - Number(event.event), i);
-	data.setValue(eventMax - Number(event.event),i,[0,Number(t[0]),Number(t[1]),0]);
+	data.setValue(eventMax - Number(event.event),i,[0,Number(t[0]),Number(t[1])]);
 	}
   }
 
   var chart = new google.visualization.ScatterChart(document.getElementById('myChart'));
 
   var options = {
-          hAxis: { minValue: 60, maxValue: 660 },
+          hAxis: { title: 'Event number',
+		           minValue: 60,
+		           maxValue: 660,
+                   gridlines: { minSpacing: 20}
+				 },
+		  vAxis: { title: 'Time',
+		           format: 'mm:ss'
+		         },
           pointSize: 5,
           series: {
                 0: { pointShape: 'circle', color:'red'},
