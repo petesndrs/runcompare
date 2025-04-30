@@ -186,8 +186,30 @@ class ReadRunData
     System.out.println("Run");
 
     runners = new ArrayList<String>();
-    runners.add("690790");
-    runners.add("1198163");
+    runners.add("690790"); // Pete S
+    runners.add("1198163"); // Dom H
+    runners.add("353912"); // Errol R
+    runners.add("265933"); // Trevor Moore
+    runners.add("2337854"); //Caroline Butler
+    runners.add("15502"); // Peter Cross
+    runners.add("1470924"); // Adele Tudor
+    runners.add("1176982"); // Gary Belchem
+    runners.add("218428"); // Segun O 
+    runners.add("282505"); // Jenny Kay
+    runners.add("133968"); // Mary-Elizabeth
+    runners.add("6046394"); // Shanta Perseud
+    runners.add("70990"); // Graham Laylee
+    runners.add("3321829"); // Nick Gibbons
+    runners.add("598508"); // Mark Muffet
+    runners.add("370297"); // Anthony P
+    runners.add("2944648"); // Sally Chapman
+    runners.add("410310"); // Johnathan Taylor
+    runners.add("2095141"); // Anthony W-R
+    runners.add("532172"); // Andy McDougall
+    runners.add("3920"); // Jo Quantrill
+    runners.add("119924"); // Caitlin Clasper
+    runners.add("394540"); // Andrew Morely
+    
 
     runnersEvents = new HashMap<>();
     names = new ArrayList<>();
