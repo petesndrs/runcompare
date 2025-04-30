@@ -122,7 +122,12 @@ function drawVisualization(i, name, events) {
 	t = String(event.time).split(":");
 	//console.log(event.time + " " + event.event + " " + t);
 	//console.log("SetValue ", eventMax - Number(event.event), i);
-	data.setValue(eventMax - Number(event.event),i,[0,Number(t[0]),Number(t[1])]);
+	if (t.length === 2) {
+	  data.setValue(eventMax - Number(event.event),i,[0,Number(t[0]),Number(t[1])]);
+	}
+	if (t.length === 3) {
+	  data.setValue(eventMax - Number(event.event),i,[Number(t[0]),Number(t[1]),Number(t[2])]);
+	}
 	}
   }
 
@@ -135,7 +140,7 @@ function drawVisualization(i, name, events) {
                    gridlines: { minSpacing: 20}
 				 },
 		  vAxis: { title: 'Time',
-		           format: 'mm:ss'
+		           format: 'H:mm:ss'
 		         },
           pointSize: 5,
           series: {
@@ -145,7 +150,6 @@ function drawVisualization(i, name, events) {
                 3: { pointShape: 'diamond', color:'blue'}
             }
         };
-		
   chart.draw(data, options);
 }
 
