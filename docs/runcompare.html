@@ -22,15 +22,22 @@ async function body() {
     google.charts.load('current',{packages:['corechart']});
 
     json = await getText();
+	
+	runnerList = [];
     for (const runner of json.runners) {
         console.log("+-> " + runner.name);
+		runnerList.push(runner.name);
 		for (const run of runner.events) {
 				if (Number(run.event) < eventMin) eventMin = Number(run.event);
 				if (Number(run.event) > eventMax) eventMax = Number(run.event);
 			}
     }
+	
 	console.log("Range " + eventMin + "-" + eventMax);
+    document.getElementById("intro").innerHTML = "Event " + eventMin + " to Event " + eventMax;
 
+	runnerList.sort();
+	//console.log(runnerList);
     select1 = document.getElementById("selectRunner1");
     select2 = document.getElementById("selectRunner2");
 	select2.disabled = true;
@@ -38,12 +45,16 @@ async function body() {
 	select3.disabled = true;
     select4 = document.getElementById("selectRunner4");
 	select4.disabled = true;
-    for (const element of json.runners) {
-        select1.appendChild(new Option(element.name, element.id));
-        select2.appendChild(new Option(element.name, element.id));
-        select3.appendChild(new Option(element.name, element.id));
-        select4.appendChild(new Option(element.name, element.id));
-    }
+	for (let i = 0; i < runnerList.length; i++) {
+        for (const runner of json.runners) {
+		    if (runnerList[i] === runner.name) {
+                select1.appendChild(new Option(runner.name, runner.id));
+                select2.appendChild(new Option(runner.name, runner.id));
+                select3.appendChild(new Option(runner.name, runner.id));
+                select4.appendChild(new Option(runner.name, runner.id));
+		    }
+        }
+	}
 
 }
 
@@ -135,12 +146,12 @@ function drawVisualization(i, name, events) {
 
   var options = {
           hAxis: { title: 'Event number',
-		           minValue: 60,
-		           maxValue: 660,
+		           viewWindow: {min: 0, max: (eventMax + (10 - eventMax%10))},
                    gridlines: { minSpacing: 20}
 				 },
 		  vAxis: { title: 'Time',
-		           format: 'H:mm:ss'
+		           format: 'H:mm:ss',
+				   viewWindow: {min: [0,14,0], max:[0,34,0]}
 		         },
           pointSize: 5,
           series: {
@@ -160,6 +171,8 @@ function drawVisualization(i, name, events) {
 <body onload="body()">
 
 <h1>Compare the parkruns</h1>
+
+<p id="intro"></p>
 
 <h2>Select Runners</h2>
 
