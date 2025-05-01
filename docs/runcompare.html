@@ -16,6 +16,8 @@ var data;
 var eventMin = 1000;
 var eventMax = 0;
 
+const runnerSelects = []; // Array to hold the select elements
+
 async function body() {
     console.log("body()");
 
@@ -38,20 +40,20 @@ async function body() {
 
 	runnerList.sort();
 	//console.log(runnerList);
-    select1 = document.getElementById("selectRunner1");
-    select2 = document.getElementById("selectRunner2");
-	select2.disabled = true;
-    select3 = document.getElementById("selectRunner3");
-	select3.disabled = true;
-    select4 = document.getElementById("selectRunner4");
-	select4.disabled = true;
+    runnerSelects[0] = document.getElementById("selectRunner1");
+    runnerSelects[1] = document.getElementById("selectRunner2");
+	runnerSelects[1].disabled = true;
+    runnerSelects[2] = document.getElementById("selectRunner3");
+	runnerSelects[2].disabled = true;
+    runnerSelects[3] = document.getElementById("selectRunner4");
+	runnerSelects[3].disabled = true;
 	for (let i = 0; i < runnerList.length; i++) {
         for (const runner of json.runners) {
 		    if (runnerList[i] === runner.name) {
-                select1.appendChild(new Option(runner.name, runner.id));
-                select2.appendChild(new Option(runner.name, runner.id));
-                select3.appendChild(new Option(runner.name, runner.id));
-                select4.appendChild(new Option(runner.name, runner.id));
+                runnerSelects[0].appendChild(new Option(runner.name, runner.id));
+                runnerSelects[1].appendChild(new Option(runner.name, runner.id));
+                runnerSelects[2].appendChild(new Option(runner.name, runner.id));
+                runnerSelects[3].appendChild(new Option(runner.name, runner.id));
 		    }
         }
 	}
@@ -70,17 +72,17 @@ async function getText() {
 
 function selectRunner1() {
     selectRunner(1);
-	document.getElementById("selectRunner2").disabled=false;
+	runnerSelects[1].disabled=false;
 }
 
 function selectRunner2() {
     selectRunner(2);
-	document.getElementById("selectRunner3").disabled=false;
+	runnerSelects[2].disabled=false;
 }
 
 function selectRunner3() {
     selectRunner(3);
-	document.getElementById("selectRunner4").disabled=false;
+	runnerSelects[3].disabled=false;
 }
 
 function selectRunner4() {
@@ -88,7 +90,7 @@ function selectRunner4() {
 }
 
 function selectRunner(i) {
-    selected = document.getElementById("selectRunner"+i).value;
+    selected = runnerSelects[i-1].value;
     console.log(selected);
     for (const element of json.runners) {
         if (element.id == selected) {
