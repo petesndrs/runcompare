@@ -15,7 +15,7 @@ var json;
 var dataTable;
 var eventMin = Infinity;
 var eventMax = 0;
-
+const numSelects = 4;
 const runnerSelects = []; // Array to hold the select elements
 
 async function body() {
@@ -167,6 +167,42 @@ function drawVisualization(i, name, events) {
             }
         };
   chart.draw(dataTable, options);
+  
+  countWinners();
+}
+  
+function countWinners() {
+  winningAny = [0,0,0,0];
+  winningLeastOne = [0,0,0,0];
+  winningAll = [0,0,0,0];
+  for (let row = 0; row < dataTable.getNumberOfRows(); row++) {
+    bestTime = [2,0,0];
+	var winner = 999;
+	var runners = 0;
+	for (let col = 1; col < dataTable.getNumberOfColumns(); col++) {
+		value = dataTable.getValue(row,col);
+		if (value !== null) {
+		  runners++;
+		  if (value < bestTime) {
+			bestTime = value;
+			winner = col;
+		  }
+		}
+	}
+	//console.log(dataTable.getValue(row,0) + " bestTime " + bestTime + " " + winner);
+	if (winner !== 999) {
+	  winningAny[winner-1]++;
+	  if (runners > 1){
+	    winningLeastOne[winner-1]++;
+	  }
+	  if (runners === numSelects) {
+	    winningAll[winner-1]++;
+	  }
+	}
+  }
+  console.log(winningAny);
+  console.log(winningLeastOne);
+  console.log(winningAll);
 }
 
 </script>
