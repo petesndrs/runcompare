@@ -12,16 +12,14 @@ src="https://www.gstatic.com/charts/loader.js">
 <script>
 
 var json;
-var data;
-var eventMin = 1000;
+var dataTable;
+var eventMin = Infinity;
 var eventMax = 0;
 
 const runnerSelects = []; // Array to hold the select elements
 
 async function body() {
     console.log("body()");
-
-    google.charts.load('current',{packages:['corechart']});
 
     json = await getText();
 	
@@ -57,7 +55,12 @@ async function body() {
 		    }
         }
 	}
-
+	
+	google.charts.load('current',{
+	    packages:['corechart'],
+		callback: initialiseDataTable
+		}
+	);
 }
 
 async function getText() {
@@ -68,6 +71,18 @@ async function getText() {
     console.log(myText);
     const json = JSON.parse(myText);
     return json;
+}
+
+function initialiseDataTable() {
+  if (typeof dataTable == "undefined") {
+    console.log("new DataTable");
+    dataTable = new google.visualization.DataTable();
+    dataTable.addColumn('number', 'Event');
+	for (ev = eventMax; ev >= eventMin; ev--){
+		dataTable.addRows([[ev]]);
+	}
+	console.log("Number of rows " + dataTable.getNumberOfRows());
+  }
 }
 
 function selectRunner1() {
@@ -104,31 +119,19 @@ function selectRunner(i) {
 
 }
 
-const columns = [];
+const columns = ["Events"];
 
 function drawVisualization(i, name, events) {
-
-  console.log(data);
-  
-  if (typeof data == "undefined") {
-    console.log("new DataTable");
-    data = new google.visualization.DataTable();
-    data.addColumn('number', 'Event');
-	for (ev = eventMax; ev >= eventMin; ev--){
-		data.addRows([[ev]]);
-	}
-	console.log("Number of rows " + data.getNumberOfRows());
-  }
   
   console.log(columns);
   if (typeof columns[i] !== "undefined" && columns[i] !== name) {
-    console.log("Remove old column " + columns[i]);
-    data.removeColumn(i);
+    console.log("Remove old column " + i + " name " + columns[i]);
+    dataTable.removeColumn(i);
   }
   
   columns[i] = name;
-  console.log("Insert new column " + columns[i]);
-  data.insertColumn(i, 'timeofday', name);
+  console.log("Insert new column " + i + " name " + columns[i]);
+  dataTable.insertColumn(i, 'timeofday', name);
 
   for (const event of events) {
   if (typeof event.time !== "undefined"){
@@ -136,10 +139,10 @@ function drawVisualization(i, name, events) {
 	//console.log(event.time + " " + event.event + " " + t);
 	//console.log("SetValue ", eventMax - Number(event.event), i);
 	if (t.length === 2) {
-	  data.setValue(eventMax - Number(event.event),i,[0,Number(t[0]),Number(t[1])]);
+	  dataTable.setValue(eventMax - Number(event.event),i,[0,Number(t[0]),Number(t[1])]);
 	}
 	if (t.length === 3) {
-	  data.setValue(eventMax - Number(event.event),i,[Number(t[0]),Number(t[1]),Number(t[2])]);
+	  dataTable.setValue(eventMax - Number(event.event),i,[Number(t[0]),Number(t[1]),Number(t[2])]);
 	}
 	}
   }
@@ -163,7 +166,7 @@ function drawVisualization(i, name, events) {
                 3: { pointShape: 'diamond', color:'blue'}
             }
         };
-  chart.draw(data, options);
+  chart.draw(dataTable, options);
 }
 
 </script>
