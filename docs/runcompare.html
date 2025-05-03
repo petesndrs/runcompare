@@ -17,6 +17,7 @@ var eventMin = Infinity;
 var eventMax = 0;
 const numSelects = 4;
 const runnerSelects = []; // Array to hold the select elements
+var chart;
 
 async function body() {
     console.log("body()");
@@ -65,9 +66,9 @@ async function body() {
 
 async function getText() {
     console.log("Getting json");
-    //myObject = await fetch("https://petesndrs.github.io/runcompare/RunnerData.json");
-    myObject = await fetch("./RunnerData.json");
-    myText = await myObject.text();
+    //response = await fetch("https://petesndrs.github.io/runcompare/RunnerData.json");
+    response = await fetch("./RunnerData.json");
+    myText = await response.text();
     console.log(myText);
     const json = JSON.parse(myText);
     return json;
@@ -83,6 +84,8 @@ function initialiseDataTable() {
 	}
 	console.log("Number of rows " + dataTable.getNumberOfRows());
   }
+  chart = new google.visualization.ScatterChart(document.getElementById('myChart'));
+
 }
 
 function selectRunner1() {
@@ -134,20 +137,18 @@ function drawVisualization(i, name, events) {
   dataTable.insertColumn(i, 'timeofday', name);
 
   for (const event of events) {
-  if (typeof event.time !== "undefined"){
-	t = String(event.time).split(":");
-	//console.log(event.time + " " + event.event + " " + t);
-	//console.log("SetValue ", eventMax - Number(event.event), i);
-	if (t.length === 2) {
-	  dataTable.setValue(eventMax - Number(event.event),i,[0,Number(t[0]),Number(t[1])]);
-	}
-	if (t.length === 3) {
-	  dataTable.setValue(eventMax - Number(event.event),i,[Number(t[0]),Number(t[1]),Number(t[2])]);
-	}
+	if (typeof event.time !== "undefined"){
+		t = String(event.time).split(":");
+		//console.log(event.time + " " + event.event + " " + t);
+		//console.log("SetValue ", eventMax - Number(event.event), i);
+		if (t.length === 2) {
+			dataTable.setValue(eventMax - Number(event.event),i,[0,Number(t[0]),Number(t[1])]);
+		}
+		if (t.length === 3) {
+		dataTable.setValue(eventMax - Number(event.event),i,[Number(t[0]),Number(t[1]),Number(t[2])]);
+		}
 	}
   }
-
-  var chart = new google.visualization.ScatterChart(document.getElementById('myChart'));
 
   var options = {
           hAxis: { title: 'Event number',
@@ -203,6 +204,76 @@ function countWinners() {
   console.log(winningAny);
   console.log(winningLeastOne);
   console.log(winningAll);
+  
+  var dataPi1 = google.visualization.arrayToDataTable([
+      ['Runner', 'Wins'],
+      [columns[1], winningAny[0]],
+      [columns[2], winningAny[1]],
+      [columns[3], winningAny[2]],
+      [columns[4], winningAny[3]],
+    ]);
+
+  var optionsPi1 = {
+    title: 'Fastest in group (all events)',
+	pieSliceText: 'value',
+	slices: {
+            0: { color: 'red'},
+            1: { color: 'violet'},
+			2: { color: 'lime'},
+            3: { color: 'blue'}
+          }
+  };
+
+  var chartPi1 = new google.visualization.PieChart(document.getElementById('pi1'));
+
+  chartPi1.draw(dataPi1, optionsPi1);
+  
+  var dataPi2 = google.visualization.arrayToDataTable([
+      ['Runner', 'Wins'],
+      [columns[1], winningLeastOne[0]],
+      [columns[2], winningLeastOne[1]],
+      [columns[3], winningLeastOne[2]],
+      [columns[4], winningLeastOne[3]],
+    ]);
+
+  var optionsPi2 = {
+    title: 'Fastest in group (events with at least 2)',
+	pieSliceText: 'value',
+	slices: {
+            0: { color: 'red'},
+            1: { color: 'violet'},
+			2: { color: 'lime'},
+            3: { color: 'blue'}
+          }
+  };
+
+  var chartPi2 = new google.visualization.PieChart(document.getElementById('pi2'));
+
+  chartPi2.draw(dataPi2, optionsPi2);
+  
+  var dataPi3 = google.visualization.arrayToDataTable([
+      ['Runner', 'Wins'],
+      [columns[1], winningAll[0]],
+      [columns[2], winningAll[1]],
+      [columns[3], winningAll[2]],
+      [columns[4], winningAll[3]],
+    ]);
+
+  var optionsPi3 = {
+    title: 'Fastest in group (events with all 4)',
+	pieSliceText: 'value',
+	slices: {
+            0: { color: 'red'},
+            1: { color: 'violet'},
+			2: { color: 'lime'},
+            3: { color: 'blue'}
+          }
+  };
+
+  var chartPi3 = new google.visualization.PieChart(document.getElementById('pi3'));
+
+  chartPi3.draw(dataPi3, optionsPi3);
+  
 }
 
 </script>
@@ -241,7 +312,13 @@ function countWinners() {
 </select>
 </div>
 
-<div id="myChart" style="max-width:800px; height:400px"></div>
+<div id="myChart" style="max-width:800px; height:400px; background-color:white"></div>
+
+<div class="flex-container">
+  <div id="pi1" style="flex-basis: 250px; background-color:white"></div>
+  <div id="pi2" style="flex-basis: 250px; background-color:white"></div>
+  <div id="pi3" style="flex-basis: 250px; background-color:white"></div>
+</div>
 
 <p class="filler">&nbsp;</p>
 

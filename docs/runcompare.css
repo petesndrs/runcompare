@@ -1,6 +1,7 @@
 body {
 font-family: Arial;
 font-size: 16px;
+background-color: lightblue;
 }
 
 p.filler {
@@ -21,4 +22,11 @@ color: white;
 background-color: firebrick;
 font-family: Arial;
 font-size: 16px;
+}
+
+div.flex-container {
+display: flex;
+flex-direction: row;
+justify-content: space-evenly;
+height: 250px;
 }
