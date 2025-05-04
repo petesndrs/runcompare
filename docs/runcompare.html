@@ -18,6 +18,8 @@ var eventMax = 0;
 const numSelects = 4;
 const runnerSelects = []; // Array to hold the select elements
 var runnersSelected = 0;
+var dashboard;
+var control;
 var chart;
 
 async function body() {
@@ -64,7 +66,7 @@ async function body() {
 	}
 	
 	google.charts.load('current',{
-	    packages:['corechart'],
+	    packages:['corechart','controls'],
 		callback: initialiseDataTable
 		}
 	);
@@ -98,8 +100,51 @@ function initialiseDataTable() {
 	}
 	console.log("Number of rows " + dataTable.getNumberOfRows());
   }
-  chart = new google.visualization.ScatterChart(document.getElementById('myChart'));
 
+  dashboard = new google.visualization.Dashboard(document.getElementById('myDashboard'));
+
+  control = new google.visualization.ControlWrapper({
+    'controlType': 'NumberRangeFilter',
+	'containerId': 'myControl',
+	'options': {
+		'filterColumnLabel': 'Event'
+		}
+  });
+
+  chart = new google.visualization.ChartWrapper({
+	'chartType': 'ScatterChart',
+	'containerId': 'myChart',
+    'options' : {
+          hAxis: { title: 'Event number',
+		           //viewWindow: {min: 0, max: (eventMax + (10 - eventMax%10))},
+                   gridlines: { minSpacing: 20}
+				 },
+		  vAxis: { title: 'Time',
+		           format: 'H:mm:ss',
+				   viewWindow: {min: [0,14,0], max:[0,34,0]}
+		         },
+          pointSize: 5,
+          series: {
+                0: { pointShape: 'circle', color:'red'},
+                1: { pointShape: 'triangle', color:'violet'},
+                2: { pointShape: 'square', color:'lime'},
+                3: { pointShape: 'diamond', color:'blue'}
+            }
+        }
+		});
+  dashboard.bind(control, chart);
+  google.visualization.events.addListener(control, 'statechange',controlStateChange);
+}
+
+function controlStateChange(){
+  min = control.getState().lowValue;
+  max = control.getState().highValue;
+  console.log("StateChange " + min + " " + max);
+  minRoundDown = min - min%10;
+  maxRoundUp = max + (10 - max%10);
+  console.log("StateChange " + minRoundDown + " " + maxRoundUp);
+  chart.setOption("hAxis.viewWindow.min", minRoundDown);
+  chart.setOption("hAxis.viewWindow.max", maxRoundUp);
 }
 
 function selectRunner1() {
@@ -163,33 +208,15 @@ function drawVisualization(i, name, events) {
 			dataTable.setValue(eventMax - Number(event.event),i,[0,Number(t[0]),Number(t[1])]);
 		}
 		if (t.length === 3) {
-		dataTable.setValue(eventMax - Number(event.event),i,[Number(t[0]),Number(t[1]),Number(t[2])]);
+			dataTable.setValue(eventMax - Number(event.event),i,[Number(t[0]),Number(t[1]),Number(t[2])]);
 		}
 	}
   }
+  dashboard.draw(dataTable);
 
-  var options = {
-          hAxis: { title: 'Event number',
-		           viewWindow: {min: 0, max: (eventMax + (10 - eventMax%10))},
-                   gridlines: { minSpacing: 20}
-				 },
-		  vAxis: { title: 'Time',
-		           format: 'H:mm:ss',
-				   viewWindow: {min: [0,14,0], max:[0,34,0]}
-		         },
-          pointSize: 5,
-          series: {
-                0: { pointShape: 'circle', color:'red'},
-                1: { pointShape: 'triangle', color:'violet'},
-                2: { pointShape: 'square', color:'lime'},
-                3: { pointShape: 'diamond', color:'blue'}
-            }
-        };
-  chart.draw(dataTable, options);
-  
   countWinners();
 }
-  
+
 function countWinners() {
   winningAny = [0,0,0,0];
   winningLeastOne = [0,0,0,0];
@@ -330,7 +357,10 @@ function countWinners() {
 </select>
 </div>
 
+<div id="myDashboard">
+<div id="myControl" style="max-width:800px; height:100px; background-color:white"></div>
 <div id="myChart" style="max-width:800px; height:400px; background-color:white"></div>
+</div>
 
 <div class="flex-container">
   <div id="pi1" style="flex-basis: 250px; background-color:white"></div>
