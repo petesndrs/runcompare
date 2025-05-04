@@ -24,6 +24,11 @@ async function body() {
 
     json = await getText();
 	
+	if (json === null) {
+	  document.getElementById("intro").innerHTML = "Error reading event data";
+	  return;
+	}
+	
 	runnerList = [];
     for (const runner of json.runners) {
         console.log("+-> " + runner.name);
@@ -66,9 +71,17 @@ async function body() {
 
 async function getText() {
     console.log("Getting json");
-    //response = await fetch("https://petesndrs.github.io/runcompare/RunnerData.json");
-    response = await fetch("./RunnerData.json");
-    myText = await response.text();
+	try {
+      //response = await fetch("https://petesndrs.github.io/runcompare/RunnerData.json");
+      response = await fetch("./RunnerData.json");
+	  if (!response.ok) {
+        throw new Error(`Response status: ${response.status}`);
+      }
+      myText = await response.text();
+	} catch (error) {
+      console.error(error.message);
+	  return null;
+    }
     console.log(myText);
     const json = JSON.parse(myText);
     return json;
