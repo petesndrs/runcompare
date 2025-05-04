@@ -17,6 +17,7 @@ var eventMin = Infinity;
 var eventMax = 0;
 const numSelects = 4;
 const runnerSelects = []; // Array to hold the select elements
+var runnersSelected = 0;
 var chart;
 
 async function body() {
@@ -102,21 +103,25 @@ function initialiseDataTable() {
 }
 
 function selectRunner1() {
+    if (runnersSelected === 0) runnersSelected = 1;
     selectRunner(1);
 	runnerSelects[1].disabled=false;
 }
 
 function selectRunner2() {
+    if (runnersSelected === 1) runnersSelected = 2;
     selectRunner(2);
 	runnerSelects[2].disabled=false;
 }
 
 function selectRunner3() {
+    if (runnersSelected === 2) runnersSelected = 3;
     selectRunner(3);
 	runnerSelects[3].disabled=false;
 }
 
 function selectRunner4() {
+    if (runnersSelected === 3) runnersSelected = 4;
     selectRunner(4);
 }
 
@@ -209,7 +214,7 @@ function countWinners() {
 	  if (runners > 1){
 	    winningLeastOne[winner-1]++;
 	  }
-	  if (runners === numSelects) {
+	  if (runnersSelected > 2 && runners === runnersSelected) {
 	    winningAll[winner-1]++;
 	  }
 	}
@@ -219,7 +224,7 @@ function countWinners() {
   console.log(winningAll);
   
   var dataPi1 = google.visualization.arrayToDataTable([
-      ['Runner', 'Wins'],
+      ['Runner', 'Fastest'],
       [columns[1], winningAny[0]],
       [columns[2], winningAny[1]],
       [columns[3], winningAny[2]],
@@ -242,7 +247,7 @@ function countWinners() {
   chartPi1.draw(dataPi1, optionsPi1);
   
   var dataPi2 = google.visualization.arrayToDataTable([
-      ['Runner', 'Wins'],
+      ['Runner', 'Fastest'],
       [columns[1], winningLeastOne[0]],
       [columns[2], winningLeastOne[1]],
       [columns[3], winningLeastOne[2]],
@@ -250,7 +255,7 @@ function countWinners() {
     ]);
 
   var optionsPi2 = {
-    title: 'Fastest in group (events with at least 2)',
+    title: 'Fastest (events with at least 2 selected)',
 	pieSliceText: 'value',
 	slices: {
             0: { color: 'red'},
@@ -265,7 +270,7 @@ function countWinners() {
   chartPi2.draw(dataPi2, optionsPi2);
   
   var dataPi3 = google.visualization.arrayToDataTable([
-      ['Runner', 'Wins'],
+      ['Runner', 'Fastest'],
       [columns[1], winningAll[0]],
       [columns[2], winningAll[1]],
       [columns[3], winningAll[2]],
@@ -273,7 +278,7 @@ function countWinners() {
     ]);
 
   var optionsPi3 = {
-    title: 'Fastest in group (events with all 4)',
+    title: 'Fastest in group (events with all ' + runnersSelected + ' selected)',
 	pieSliceText: 'value',
 	slices: {
             0: { color: 'red'},
