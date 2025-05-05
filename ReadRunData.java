@@ -6,6 +6,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.URI;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,6 +26,7 @@ class ReadRunData
   List<String> runners;
   Map<String, List<EventData>> runnersEvents;
   List<String> names;
+  private String date;
 
   class EventData {
     public final String eventNumber;
@@ -182,8 +184,15 @@ class ReadRunData
 	  }
   }
   
-  private void run(){
+  private void run(String eventName){
     System.out.println("Run");
+    
+    if (eventName.isEmpty()) {
+      eventName = URL_EVENT_NAME;
+    }
+    
+    date = LocalDate.now().toString();
+    System.out.println(date);
 
     runners = new ArrayList<String>();
     runners.add("690790"); // Pete S
@@ -216,10 +225,10 @@ class ReadRunData
 
     for (String runner : runners) {
 
-      String url = String.format(URL_FORMAT, URL_EVENT_NAME, runner);
+      String url = String.format(URL_FORMAT, eventName, runner);
       System.out.println(url);
       HttpRequest request = HttpRequest.newBuilder()
-        .uri(URI.create(String.format(URL_FORMAT, URL_EVENT_NAME, runner)))
+        .uri(URI.create(String.format(URL_FORMAT, eventName, runner)))
         .setHeader("User-Agent", USER_AGENT)
         .build();
 
@@ -277,7 +286,12 @@ class ReadRunData
       System.out.println("Single runner:\n" + jsonRunner);
     }
     JSONArray jsonRunnerArray = new JSONArray(runnerData);
+    
+    //JSONObject jsonDate = new JSONObject();
+    //jsonDate.put("date", date);
+    
     JSONObject all = new JSONObject();
+    all.put("date", date);
     all.put("runners", jsonRunnerArray);
     System.out.println("All runners:\n" + all);
     
@@ -293,7 +307,20 @@ class ReadRunData
 
   public static void main(String args[])
   {
+    String eventName = "";
+    String fileName = "";
+    for (int i = 0; i < args.length; i+=2) {
+        System.out.println("Argument " + i + ": " + args[i]);
+        if (args[i].equals("-p")) {
+          eventName = args[i+1];
+          System.out.println("Overriding event name: " + eventName);
+        } else if (args[i].equals("-f")) {
+          eventName = args[i+1];
+          System.out.println("Using file name: " + fileName);
+        }
+    }
+    
     ReadRunData readRunData = new ReadRunData();
-    readRunData.run();
+    readRunData.run(eventName);
   }
 }
