@@ -28,7 +28,7 @@ async function body() {
     json = await getText();
 	
 	if (json === null) {
-	  document.getElementById("intro").innerHTML = "Error reading event data";
+	  document.getElementById("intro1").innerHTML = "Error reading event data";
 	  return;
 	}
 	
@@ -42,8 +42,9 @@ async function body() {
 			}
     }
 	
+	document.getElementById("intro1").innerHTML = "Data updated on: " + json.date;
 	console.log("Range " + eventMin + "-" + eventMax);
-    document.getElementById("intro").innerHTML = "Event " + eventMin + " to Event " + eventMax;
+    document.getElementById("intro2").innerHTML = "Event " + eventMin + " to Event " + eventMax;
 
 	runnerList.sort();
 	//console.log(runnerList);
@@ -329,7 +330,8 @@ function countWinners() {
 
 <h1>Compare the parkruns</h1>
 
-<p id="intro"></p>
+<p id="intro1"></p>
+<p id="intro2"></p>
 
 <h2>Select Runners</h2>
 
