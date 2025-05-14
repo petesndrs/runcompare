@@ -272,7 +272,7 @@ class ReadRunData
       String runner = runners.get(i);
       JSONObject jsonRunner = new JSONObject();
       jsonRunner.put("id", runner);
-      jsonRunner.put("name", names.get(i).trim());
+      jsonRunner.put("name", names.get(i).replaceAll("\\P{ASCII}", "").trim());
       List<JSONObject> eventData = new ArrayList<>();
       for (EventData event : runnersEvents.get(runner)) {
         JSONObject jsonEvent = new JSONObject(); 
@@ -286,9 +286,6 @@ class ReadRunData
       System.out.println("Single runner:\n" + jsonRunner);
     }
     JSONArray jsonRunnerArray = new JSONArray(runnerData);
-    
-    //JSONObject jsonDate = new JSONObject();
-    //jsonDate.put("date", date);
     
     JSONObject all = new JSONObject();
     all.put("date", date);
