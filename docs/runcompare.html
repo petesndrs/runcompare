@@ -75,14 +75,17 @@ async function body() {
 
 async function getText() {
     console.log("Getting json");
-	try {
-      //response = await fetch("https://petesndrs.github.io/runcompare/RunnerData.json");
-      response = await fetch("./RunnerData.json");
-	  if (!response.ok) {
+    try {
+      if (window.location.protocol === "file:") {
+        response = await fetch("https://petesndrs.github.io/runcompare/RunnerData.json");
+      } else {
+        response = await fetch("./RunnerData.json");
+      }
+      if (!response.ok) {
         throw new Error(`Response status: ${response.status}`);
       }
       myText = await response.text();
-	} catch (error) {
+    } catch (error) {
       console.error(error.message);
 	  return null;
     }
