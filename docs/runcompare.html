@@ -264,13 +264,14 @@ function countWinners() {
 
   var optionsPi1 = {
     title: 'Fastest in group (all events)',
-	pieSliceText: 'value',
-	slices: {
+    pieSliceText: 'value',
+    slices: {
             0: { color: 'red'},
             1: { color: 'violet'},
-			2: { color: 'lime'},
+            2: { color: 'lime'},
             3: { color: 'blue'}
-          }
+          },
+    legend: 'none'
   };
 
   var chartPi1 = new google.visualization.PieChart(document.getElementById('pi1'));
@@ -287,13 +288,14 @@ function countWinners() {
 
   var optionsPi2 = {
     title: 'Fastest (events with at least 2 selected)',
-	pieSliceText: 'value',
-	slices: {
+    pieSliceText: 'value',
+    slices: {
             0: { color: 'red'},
             1: { color: 'violet'},
-			2: { color: 'lime'},
+            2: { color: 'lime'},
             3: { color: 'blue'}
-          }
+          },
+    legend: 'none'
   };
 
   var chartPi2 = new google.visualization.PieChart(document.getElementById('pi2'));
@@ -310,13 +312,14 @@ function countWinners() {
 
   var optionsPi3 = {
     title: 'Fastest in group (events with all ' + runnersSelected + ' selected)',
-	pieSliceText: 'value',
-	slices: {
+    pieSliceText: 'value',
+    slices: {
             0: { color: 'red'},
             1: { color: 'violet'},
-			2: { color: 'lime'},
+            2: { color: 'lime'},
             3: { color: 'blue'}
-          }
+          },
+    legend: 'none'
   };
 
   var chartPi3 = new google.visualization.PieChart(document.getElementById('pi3'));
