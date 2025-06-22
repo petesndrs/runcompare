@@ -13,6 +13,7 @@ src="https://www.gstatic.com/charts/loader.js">
 
 var json;
 var dataTable;
+var winnerChart;
 var eventMin = Infinity;
 var eventMax = 0;
 const numSelects = 4;
@@ -68,9 +69,14 @@ async function body() {
 	
 	google.charts.load('current',{
 	    packages:['corechart','controls'],
-		callback: initialiseDataTable
+		callback: initialiseTables
 		}
 	);
+}
+
+function initialiseTables() {
+  initialiseDataTable();
+  initialiseCharts();
 }
 
 async function getText() {
@@ -94,16 +100,7 @@ async function getText() {
     return json;
 }
 
-function initialiseDataTable() {
-  if (typeof dataTable == "undefined") {
-    console.log("new DataTable");
-    dataTable = new google.visualization.DataTable();
-    dataTable.addColumn('number', 'Event');
-	for (ev = eventMax; ev >= eventMin; ev--){
-		dataTable.addRows([[ev]]);
-	}
-	console.log("Number of rows " + dataTable.getNumberOfRows());
-  }
+function initialiseCharts() {
 
   dashboard = new google.visualization.Dashboard(document.getElementById('myDashboard'));
 
@@ -135,9 +132,54 @@ function initialiseDataTable() {
                 3: { pointShape: 'diamond', color:'blue'}
             }
         }
+    });
+
+  winnerChart = new google.visualization.ChartWrapper({
+	'chartType': 'ScatterChart',
+	'containerId': 'myWinnerChart',
+    'options' : {
+          hAxis: { title: 'Event number',
+		           //viewWindow: {min: 0, max: (eventMax + (10 - eventMax%10))},
+                   gridlines: { minSpacing: 20}
+				 },
+		  vAxis: { title: 'Winner',
+		           textPosition: 'none'
+				   //viewWindow: {min: -1, max:1}
+		         },
+          pointSize: 10,
+          series: {
+                0: { pointShape: 'circle', color:'red'},
+                1: { pointShape: 'triangle', color:'violet'},
+                2: { pointShape: 'square', color:'lime'},
+                3: { pointShape: 'diamond', color:'blue'}
+            }
+        }
 		});
-  dashboard.bind(control, chart);
-  google.visualization.events.addListener(control, 'statechange',controlStateChange);
+		
+  dashboard.bind(control, [chart, winnerChart]);
+  google.visualization.events.addListener(control, 'statechange', controlStateChange);
+}
+
+function initialiseDataTable() {
+
+  if (typeof dataTable == "undefined") {
+    console.log("new DataTable");
+    dataTable = new google.visualization.DataTable();
+    dataTable.addColumn('number', 'Event');
+	for (ev = eventMax; ev >= eventMin; ev--){
+		dataTable.addRows([[ev]]);
+	}
+	console.log("Number of rows " + dataTable.getNumberOfRows());
+  }
+
+  dataTable.addColumn('timeofday', 'unknown');
+  dataTable.addColumn('timeofday', 'unknown');
+  dataTable.addColumn('timeofday', 'unknown');
+  dataTable.addColumn('timeofday', 'unknown');
+  dataTable.addColumn('number', 'unknown');
+  dataTable.addColumn('number', 'unknown');
+  dataTable.addColumn('number', 'unknown');
+  dataTable.addColumn('number', 'unknown');
 }
 
 function controlStateChange(){
@@ -149,6 +191,8 @@ function controlStateChange(){
   console.log("StateChange " + minRoundDown + " " + maxRoundUp);
   chart.setOption("hAxis.viewWindow.min", minRoundDown);
   chart.setOption("hAxis.viewWindow.max", maxRoundUp);
+  winnerChart.setOption("hAxis.viewWindow.min", minRoundDown);
+  winnerChart.setOption("hAxis.viewWindow.max", maxRoundUp);
 }
 
 function selectRunner1() {
@@ -189,19 +233,23 @@ function selectRunner(i) {
 
 }
 
-const columns = ["Events"];
-
 function drawVisualization(i, name, events) {
-  
-  console.log(columns);
-  if (typeof columns[i] !== "undefined" && columns[i] !== name) {
-    console.log("Remove old column " + i + " name " + columns[i]);
-    dataTable.removeColumn(i);
-  }
-  
-  columns[i] = name;
-  console.log("Insert new column " + i + " name " + columns[i]);
+
+  console.log("Remove old columns " + i + " name " + dataTable.getColumnLabel(i));
+  // Remove from end
+  dataTable.removeColumn(8);
+  dataTable.removeColumn(7);
+  dataTable.removeColumn(6);
+  dataTable.removeColumn(5);
+  dataTable.removeColumn(i);
+
+  console.log("Insert new column " + i + " name " + name);
+  // Insert from beginning
   dataTable.insertColumn(i, 'timeofday', name);
+  dataTable.addColumn('number', dataTable.getColumnLabel(1));
+  dataTable.addColumn('number', dataTable.getColumnLabel(2));
+  dataTable.addColumn('number', dataTable.getColumnLabel(3));
+  dataTable.addColumn('number', dataTable.getColumnLabel(4));
 
   for (const event of events) {
 	if (typeof event.time !== "undefined"){
@@ -214,11 +262,55 @@ function drawVisualization(i, name, events) {
 		if (t.length === 3) {
 			dataTable.setValue(eventMax - Number(event.event),i,[Number(t[0]),Number(t[1]),Number(t[2])]);
 		}
-	}
+    }
   }
+
+  setWinnerColumns();
+
+  if (runnersSelected === 1) {
+    chart.setView({columns:[0,1]});
+	winnerChart.setView({columns:[0,5]});
+  }
+  else if (runnersSelected === 2) {
+    chart.setView({columns:[0,1,2]});
+	winnerChart.setView({columns:[0,5,6]});
+  }
+  else if (runnersSelected === 3) {
+    chart.setView({columns:[0,1,2,3]});
+	winnerChart.setView({columns:[0,5,6,7]});
+  }
+  else if (runnersSelected === 4) {
+    chart.setView({columns:[0,1,2,3,4]});
+	winnerChart.setView({columns:[0,5,6,7,8]});
+  }
+
   dashboard.draw(dataTable);
 
   countWinners();
+}
+
+function setWinnerColumns() {
+
+  for (let row = 0; row < dataTable.getNumberOfRows(); row++) {
+    bestTime = [2,0,0];
+    var winner = 999;
+    var runners = 0;
+    for (let col = 1; col <= runnersSelected; col++) {
+      value = dataTable.getValue(row,col);
+      if (value !== null) {
+        runners++;
+        if (value < bestTime) {
+          bestTime = value;
+          winner = col;
+        }
+      }
+    }
+	// winner now set
+	if (runners !== 0) {
+	  console.log("Winner " + winner + " row " + row);
+	  dataTable.setValue(row, winner + numSelects, runners);
+	}
+  }
 }
 
 function countWinners() {
@@ -229,7 +321,7 @@ function countWinners() {
     bestTime = [2,0,0];
 	var winner = 999;
 	var runners = 0;
-	for (let col = 1; col < dataTable.getNumberOfColumns(); col++) {
+	for (let col = 1; col <= runnersSelected; col++) {
 		value = dataTable.getValue(row,col);
 		if (value !== null) {
 		  runners++;
@@ -256,10 +348,10 @@ function countWinners() {
   
   var dataPi1 = google.visualization.arrayToDataTable([
       ['Runner', 'Fastest'],
-      [columns[1], winningAny[0]],
-      [columns[2], winningAny[1]],
-      [columns[3], winningAny[2]],
-      [columns[4], winningAny[3]],
+      [dataTable.getColumnLabel(1), winningAny[0]],
+      [dataTable.getColumnLabel(2), winningAny[1]],
+      [dataTable.getColumnLabel(3), winningAny[2]],
+      [dataTable.getColumnLabel(4), winningAny[3]],
     ]);
 
   var optionsPi1 = {
@@ -280,10 +372,10 @@ function countWinners() {
   
   var dataPi2 = google.visualization.arrayToDataTable([
       ['Runner', 'Fastest'],
-      [columns[1], winningLeastOne[0]],
-      [columns[2], winningLeastOne[1]],
-      [columns[3], winningLeastOne[2]],
-      [columns[4], winningLeastOne[3]],
+      [dataTable.getColumnLabel(1), winningLeastOne[0]],
+      [dataTable.getColumnLabel(2), winningLeastOne[1]],
+      [dataTable.getColumnLabel(3), winningLeastOne[2]],
+      [dataTable.getColumnLabel(4), winningLeastOne[3]],
     ]);
 
   var optionsPi2 = {
@@ -304,10 +396,10 @@ function countWinners() {
   
   var dataPi3 = google.visualization.arrayToDataTable([
       ['Runner', 'Fastest'],
-      [columns[1], winningAll[0]],
-      [columns[2], winningAll[1]],
-      [columns[3], winningAll[2]],
-      [columns[4], winningAll[3]],
+      [dataTable.getColumnLabel(1), winningAll[0]],
+      [dataTable.getColumnLabel(2), winningAll[1]],
+      [dataTable.getColumnLabel(3), winningAll[2]],
+      [dataTable.getColumnLabel(4), winningAll[3]],
     ]);
 
   var optionsPi3 = {
@@ -367,7 +459,8 @@ function countWinners() {
 
 <div id="myDashboard">
 <div id="myControl" style="max-width:800px; height:100px; background-color:white"></div>
-<div id="myChart" style="max-width:800px; height:400px; background-color:white"></div>
+<div id="myChart" style="max-width:800px; height:500px; background-color:white"></div>
+<div id="myWinnerChart" style="max-width:800px; height:300px; background-color:white"></div>
 </div>
 
 <div class="flex-container">
