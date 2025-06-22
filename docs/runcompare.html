@@ -116,6 +116,7 @@ function initialiseCharts() {
 	'chartType': 'ScatterChart',
 	'containerId': 'myChart',
     'options' : {
+          title: "Times at each event",
           hAxis: { title: 'Event number',
 		           //viewWindow: {min: 0, max: (eventMax + (10 - eventMax%10))},
                    gridlines: { minSpacing: 20}
@@ -138,15 +139,16 @@ function initialiseCharts() {
 	'chartType': 'ScatterChart',
 	'containerId': 'myWinnerChart',
     'options' : {
+          title: "Fastest at each event",
           hAxis: { title: 'Event number',
 		           //viewWindow: {min: 0, max: (eventMax + (10 - eventMax%10))},
                    gridlines: { minSpacing: 20}
 				 },
-		  vAxis: { title: 'Winner',
-		           textPosition: 'none'
-				   //viewWindow: {min: -1, max:1}
+		  vAxis: { title: 'Number running',
+		           format: '0',
+				   viewWindow: {min: 1, max:4}
 		         },
-          pointSize: 10,
+          pointSize: 5,
           series: {
                 0: { pointShape: 'circle', color:'red'},
                 1: { pointShape: 'triangle', color:'violet'},
@@ -155,7 +157,7 @@ function initialiseCharts() {
             }
         }
 		});
-		
+
   dashboard.bind(control, [chart, winnerChart]);
   google.visualization.events.addListener(control, 'statechange', controlStateChange);
 }
