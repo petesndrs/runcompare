@@ -10,4 +10,4 @@ echo %CLASSPATH%
 "c:\Program Files\Java\jdk-24\bin\javac" -Xlint -classpath %CLASSPATH% ReadRunData.java
 "c:\Program Files\Java\jdk-24\bin\javac" -Xlint RunPageParser.java
 
-"c:\Program Files\Java\jdk-24\bin\java" ReadRunData
+"c:\Program Files\Java\jdk-24\bin\java" ReadRunData -f runners.csv

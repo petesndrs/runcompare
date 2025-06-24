@@ -1,4 +1,6 @@
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringReader;
@@ -8,6 +10,7 @@ import java.net.http.HttpResponse;
 import java.net.URI;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -184,7 +187,7 @@ class ReadRunData
 	  }
   }
   
-  private void run(String eventName){
+  private void run(String eventName, List<String> runners){
     System.out.println("Run");
     
     if (eventName.isEmpty()) {
@@ -194,31 +197,7 @@ class ReadRunData
     date = LocalDate.now().toString();
     System.out.println(date);
 
-    runners = new ArrayList<String>();
-    runners.add("690790"); // Pete S
-    runners.add("1198163"); // Dom H
-    runners.add("353912"); // Errol R
-    runners.add("265933"); // Trevor Moore
-    runners.add("2337854"); //Caroline Butler
-    runners.add("15502"); // Peter Cross
-    runners.add("1470924"); // Adele Tudor
-    runners.add("1176982"); // Gary Belchem
-    runners.add("218428"); // Segun O 
-    runners.add("282505"); // Jenny Kay
-    runners.add("133968"); // Mary-Elizabeth
-    runners.add("6046394"); // Shanta Perseud
-    runners.add("70990"); // Graham Laylee
-    runners.add("3321829"); // Nick Gibbons
-    runners.add("598508"); // Mark Muffet
-    runners.add("370297"); // Anthony P
-    runners.add("2944648"); // Sally Chapman
-    runners.add("410310"); // Johnathan Taylor
-    runners.add("2095141"); // Anthony W-R
-    runners.add("532172"); // Andy McDougall
-    runners.add("3920"); // Jo Quantrill
-    runners.add("119924"); // Caitlin Clasper
-    runners.add("394540"); // Andrew Morely
-    
+    this.runners = runners;
 
     runnersEvents = new HashMap<>();
     names = new ArrayList<>();
@@ -306,18 +285,37 @@ class ReadRunData
   {
     String eventName = "";
     String fileName = "";
-    for (int i = 0; i < args.length; i+=2) {
+    for (int i = 0; i < args.length; i++) {
         System.out.println("Argument " + i + ": " + args[i]);
         if (args[i].equals("-p")) {
           eventName = args[i+1];
           System.out.println("Overriding event name: " + eventName);
         } else if (args[i].equals("-f")) {
-          eventName = args[i+1];
+          fileName = args[i+1];
           System.out.println("Using file name: " + fileName);
         }
     }
     
+    final String COMMA_DELIMETER = ",";
+    final String COMMENT_DELIMETER = "#";
+    final String ANY_WHITE_SPACE = "\s*";
+    List<String> runners = new ArrayList<String>();
+    if (!fileName.isEmpty()){
+      try {
+        BufferedReader reader = new BufferedReader(new FileReader(fileName));
+        String line;
+        while ((line = reader.readLine()) != null) {
+          String[] beforeComment = line.split(ANY_WHITE_SPACE + COMMENT_DELIMETER + ANY_WHITE_SPACE);
+          String[] values = beforeComment[0].split(ANY_WHITE_SPACE + COMMA_DELIMETER + ANY_WHITE_SPACE);
+          runners.addAll(Arrays.asList(values));
+        }
+      } catch (IOException ex) {
+        System.out.println("File Reading Exception " + ex);
+      }
+      System.out.println(runners);
+    }
+
     ReadRunData readRunData = new ReadRunData();
-    readRunData.run(eventName);
+    readRunData.run(eventName, runners);
   }
 }
